@@ -5,26 +5,19 @@ import (
     "net/http"
     "runtime"
     "strconv"
-
     "github.com/gin-gonic/gin"
     "github.com/google/uuid"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/logger"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/response"
+    "go-api-starter/internal/pkg/response"
+    "go-api-starter/internal/pkg/logger"
 )
 
-// RecoveryWithLogger wraps a panic recovery and logs stacktrace with traceID.
 func RecoveryWithLogger(lg *logger.Logger) gin.HandlerFunc {
     return func(c *gin.Context) {
         defer func() {
             if rec := recover(); rec != nil {
                 traceID := uuid.New().String()
                 stack := stacktrace(3)
-                lg.Error("panic recovered",
-                    logger.F("panic", rec),
-                    logger.F("trace_id", traceID),
-                    logger.F("stack", stack),
-                    logger.F("path", c.Request.URL.Path),
-                )
+                lg.Logger.WithField("panic", rec).WithField("trace_id", traceID).WithField("stack", stack).Error("panic recovered")
                 response.Error(c, http.StatusInternalServerError, "internal server error (trace: "+traceID+")")
                 c.Abort()
             }

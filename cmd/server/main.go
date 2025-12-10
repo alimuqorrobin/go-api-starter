@@ -8,9 +8,9 @@ import (
     "os/signal"
     "time"
 
-    "github.com/yourname/go-backend-enterprise/config"
-    "github.com/yourname/go-backend-enterprise/internal/app"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/logger"
+    "go-api-starter/config"
+    "go-api-starter/internal/app"
+    "go-api-starter/internal/pkg/logger"
 )
 
 func main() {
@@ -21,7 +21,7 @@ func main() {
         fmt.Println("logger init failed:", err)
         os.Exit(1)
     }
-    defer lg.Sync()
+    defer lg.Logger.Exit(0)
 
     appInstance, err := app.New(lg, cfg)
     if err != nil {

@@ -8,10 +8,10 @@ import (
 func init() {
     Register(&Migration{
         Version: 1,
-        Name:    "create_users_table",
+        Name: "create_users_table",
         Created: time.Now(),
-        Up:      upCreateUsers,
-        Down:    downCreateUsers,
+        Up: upCreateUsers,
+        Down: downCreateUsers,
     })
 }
 

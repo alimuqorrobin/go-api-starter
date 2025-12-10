@@ -1,17 +1,4 @@
 openapi: 3.0.0
 info:
-  title: Go Backend Enterprise
+  title: Go API Starter
   version: 0.1.0
-paths:
-  /health:
-    get:
-      summary: Health
-      responses:
-        '200':
-          description: OK
-  /api/register:
-    post:
-      summary: Register
-  /api/login:
-    post:
-      summary: Login

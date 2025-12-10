@@ -1,4 +1,7 @@
-.PHONY: build run migrate migrate-down
+.PHONY: tidy build run migrate
+
+tidy:
+	go mod tidy
 
 build:
 	go build -o bin/server ./cmd/server
@@ -8,6 +11,3 @@ run: build
 
 migrate:
 	go run ./cmd/migrate
-
-migrate-down:
-	go run ./cmd/migrate down

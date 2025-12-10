@@ -3,11 +3,10 @@ package middleware
 import (
     "net/http"
     "strings"
-
     "github.com/gin-gonic/gin"
-    "github.com/yourname/go-backend-enterprise/config"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/jwt"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/logger"
+    "go-api-starter/config"
+    "go-api-starter/internal/pkg/jwt"
+    "go-api-starter/internal/pkg/logger"
 )
 
 func JWTAuth(cfg *config.Config, lg *logger.Logger) gin.HandlerFunc {
@@ -20,7 +19,7 @@ func JWTAuth(cfg *config.Config, lg *logger.Logger) gin.HandlerFunc {
         token := strings.TrimPrefix(auth, "Bearer ")
         claims, err := jwt.ParseToken(token, cfg.JwtSecret)
         if err != nil {
-            lg.Info("invalid token", logger.F("err", err.Error()))
+            lg.Logger.WithField("err", err.Error()).Info("invalid token")
             c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
             return
         }

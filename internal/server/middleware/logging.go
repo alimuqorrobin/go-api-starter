@@ -2,9 +2,8 @@ package middleware
 
 import (
     "time"
-
     "github.com/gin-gonic/gin"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/logger"
+    "go-api-starter/internal/pkg/logger"
 )
 
 func RequestLogger(lg *logger.Logger) gin.HandlerFunc {
@@ -12,11 +11,11 @@ func RequestLogger(lg *logger.Logger) gin.HandlerFunc {
         start := time.Now()
         c.Next()
         lat := time.Since(start)
-        lg.Info("request",
-            logger.F("path", c.Request.URL.Path),
-            logger.F("method", c.Request.Method),
-            logger.F("status", c.Writer.Status()),
-            logger.F("latency_ms", lat.Milliseconds()),
-        )
+        lg.Logger.WithFields(map[string]interface{}{
+            "path": c.Request.URL.Path,
+            "method": c.Request.Method,
+            "status": c.Writer.Status(),
+            "latency_ms": lat.Milliseconds(),
+        }).Info("request")
     }
 }

@@ -1,17 +1,16 @@
 package app
 
 import (
-    "database/sql"
     "fmt"
-
     "github.com/gin-gonic/gin"
-    "github.com/yourname/go-backend-enterprise/config"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/db"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/logger"
-    userrepo "github.com/yourname/go-backend-enterprise/internal/user/repository"
-    usersvc "github.com/yourname/go-backend-enterprise/internal/user/service"
-    "github.com/yourname/go-backend-enterprise/internal/server"
-    "github.com/yourname/go-backend-enterprise/internal/pkg/migrate"
+    "go-api-starter/config"
+    "go-api-starter/internal/pkg/db"
+    "go-api-starter/internal/pkg/logger"
+    "go-api-starter/internal/pkg/migrate"
+    userrepo "go-api-starter/internal/user/repository"
+    usersvc "go-api-starter/internal/user/service"
+    depspkg "go-api-starter/internal/deps"
+    "go-api-starter/internal/server"
 )
 
 type App struct {
@@ -25,7 +24,6 @@ func New(lg *logger.Logger, cfg *config.Config) (*App, error) {
         return nil, err
     }
 
-    // run migrations (blocking). In production consider running migrations as separate job.
     if err := migrate.ApplyPending(sqlDB); err != nil {
         return nil, fmt.Errorf("migrate failed: %w", err)
     }
@@ -33,12 +31,12 @@ func New(lg *logger.Logger, cfg *config.Config) (*App, error) {
     userRepo := userrepo.NewUserRepo(sqlDB)
     userService := usersvc.NewUserService(userRepo, lg, cfg)
 
-    deps := &server.Dependencies{
-        DB:          sqlDB,
-        GormDB:      gormDB,
+    deps := &depspkg.Dependencies{
+        DB: sqlDB,
+        GormDB: gormDB,
         UserService: userService,
-        Logger:      lg,
-        Config:      cfg,
+        Logger: lg,
+        Config: cfg,
     }
 
     r := server.NewRouter(deps)
