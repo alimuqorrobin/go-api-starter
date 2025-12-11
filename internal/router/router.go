@@ -1,15 +1,15 @@
 package router
 
 import (
-    "golang-api-starter/config"
-    "golang-api-starter/internal/database"
-    "golang-api-starter/internal/handler"
-    "golang-api-starter/internal/middleware"
-    "golang-api-starter/internal/repository"
-    "golang-api-starter/internal/service"
-    "golang-api-starter/pkg/jwt"
-    "golang-api-starter/pkg/logger"
-    "golang-api-starter/pkg/response"
+    "go-api-starter/config"
+    "go-api-starter/internal/database"
+    "go-api-starter/internal/handler"
+    "go-api-starter/internal/middleware"
+    "go-api-starter/internal/repository"
+    "go-api-starter/internal/service"
+    "go-api-starter/pkg/jwt"
+    "go-api-starter/pkg/logger"
+    "go-api-starter/pkg/response"
 
     "github.com/gin-gonic/gin"
     swaggerFiles "github.com/swaggo/files"
@@ -167,7 +167,7 @@ Sudah selesai semua file di Part 5:
 
 **Struktur sekarang:**
 ```
-golang-api-starter/
+go-api-starter/
 ├── cmd/server/main.go
 ├── config/config.go
 ├── internal/

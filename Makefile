@@ -5,7 +5,7 @@ include .env
 export
 
 # Application info
-APP_NAME := golang-api-starter
+APP_NAME := go-api-starter
 VERSION := 1.0.0
 BUILD_DIR := bin
 

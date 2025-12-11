@@ -4,7 +4,7 @@ import (
     "database/sql"
     "fmt"
 
-    "golang-api-starter/config"
+    "go-api-starter/config"
     _ "github.com/lib/pq"
 )
 

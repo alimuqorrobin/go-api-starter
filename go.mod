@@ -1,4 +1,4 @@
-module golang-api-starter
+module go-api-starter
 
 go 1.24.0
 

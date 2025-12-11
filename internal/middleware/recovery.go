@@ -5,8 +5,8 @@ import (
     "net/http"
     "runtime/debug"
 
-    "golang-api-starter/pkg/logger"
-    "golang-api-starter/pkg/response"
+    "go-api-starter/pkg/logger"
+    "go-api-starter/pkg/response"
     "github.com/gin-gonic/gin"
 )
 

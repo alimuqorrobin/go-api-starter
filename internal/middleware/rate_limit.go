@@ -4,7 +4,7 @@ import (
     "sync"
     "time"
 
-    "golang-api-starter/pkg/response"
+    "go-api-starter/pkg/response"
     "github.com/gin-gonic/gin"
     "golang.org/x/time/rate"
 )
@@ -75,7 +75,7 @@ import (
     "sync"
     "time"
 
-    "golang-api-starter/pkg/response"
+    "go-api-starter/pkg/response"
     "github.com/gin-gonic/gin"
     "golang.org/x/time/rate"
 )

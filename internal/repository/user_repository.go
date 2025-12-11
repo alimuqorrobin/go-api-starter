@@ -6,7 +6,7 @@ import (
     "fmt"
     "time"
 
-    "golang-api-starter/internal/domain"
+    "go-api-starter/internal/domain"
 )
 
 type userRepository struct {

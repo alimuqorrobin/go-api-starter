@@ -56,7 +56,7 @@ Sudah selesai semua file di Part 4:
 
 **Struktur sekarang:**
 ```
-// golang-api-starter/
+// go-api-starter/
 // ├── cmd/server/main.go
 // ├── config/config.go
 // ├── internal/

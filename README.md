@@ -59,8 +59,8 @@ Enterprise-grade REST API starter template dengan Go (Golang) yang dilengkapi de
 ### Quick Start (5 menit)
 ```bash
 # 1. Clone repository
-git clone https://golang-api-starter.git
-cd golang-api-starter
+git clone https://go-api-starter.git
+cd go-api-starter
 
 # 2. Setup environment
 make init
@@ -78,8 +78,8 @@ make run
 ### Manual Setup
 ```bash
 # 1. Clone
-git clone https://golang-api-starter.git
-cd golang-api-starter
+git clone https://go-api-starter.git
+cd go-api-starter
 
 # 2. Copy .env
 cp .env.example .env
@@ -221,7 +221,7 @@ make migrate-version
 Edit file `.env`:
 ```env
 # Application
-APP_NAME=golang-api-starter
+APP_NAME=go-api-starter
 APP_PORT=8080
 
 # Database
@@ -256,7 +256,7 @@ make test-coverage
 
 ## 📁 Project Structure
 ```
-golang-api-starter/
+go-api-starter/
 ├── cmd/server/main.go           # Entry point
 ├── config/config.go             # Configuration
 ├── internal/
@@ -394,7 +394,7 @@ MIT License - see [LICENSE](LICENSE) file
 ## 📞 Support
 
 - Email: support@example.com
-- GitHub Issues: [Create Issue](https://golang-api-starter/issues)
+- GitHub Issues: [Create Issue](https://go-api-starter/issues)
 
 ---
 

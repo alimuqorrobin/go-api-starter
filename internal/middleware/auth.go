@@ -3,8 +3,8 @@ package middleware
 import (
     "strings"
 
-    "golang-api-starter/pkg/jwt"
-    "golang-api-starter/pkg/response"
+    "go-api-starter/pkg/jwt"
+    "go-api-starter/pkg/response"
     "github.com/gin-gonic/gin"
 )
 

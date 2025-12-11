@@ -3,9 +3,9 @@ package handler
 import (
     "net/http"
 
-    "golang-api-starter/internal/domain"
-    "golang-api-starter/internal/service"
-    "golang-api-starter/pkg/response"
+    "go-api-starter/internal/domain"
+    "go-api-starter/internal/service"
+    "go-api-starter/pkg/response"
     "github.com/gin-gonic/gin"
 )
 

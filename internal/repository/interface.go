@@ -2,7 +2,7 @@ package repository
 
 import (
     "context"
-    "golang-api-starter/internal/domain"
+    "go-api-starter/internal/domain"
 )
 
 // UserRepository interface - tidak tergantung pada ORM tertentu

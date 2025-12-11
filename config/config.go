@@ -60,7 +60,7 @@ func LoadConfig() *Config {
 
     return &Config{
         // App
-        AppName: getEnv("APP_NAME", "golang-api-starter"),
+        AppName: getEnv("APP_NAME", "go-api-starter"),
         AppEnv:  getEnv("APP_ENV", "development"),
         Port:    getEnv("APP_PORT", "8080"),
         Debug:   getEnvBool("APP_DEBUG", true),

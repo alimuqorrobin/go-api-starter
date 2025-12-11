@@ -6,7 +6,7 @@ import (
     "fmt"
     "time"
 
-    "golang-api-starter/config"
+    "go-api-starter/config"
 )
 
 // Database interface untuk abstraksi - tidak tergantung ORM tertentu

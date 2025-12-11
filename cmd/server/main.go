@@ -9,11 +9,11 @@ import (
     "syscall"
     "time"
 
-    "golang-api-starter/config"
-    "golang-api-starter/internal/database"
-    "golang-api-starter/internal/router"
-    "golang-api-starter/pkg/logger"
-    _ "golang-api-starter/docs"
+    "go-api-starter/config"
+    "go-api-starter/internal/database"
+    "go-api-starter/internal/router"
+    "go-api-starter/pkg/logger"
+    _ "go-api-starter/docs"
 
     "github.com/gin-gonic/gin"
 )

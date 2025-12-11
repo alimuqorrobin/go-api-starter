@@ -5,8 +5,8 @@ import (
     "fmt"
     "sync"
 
-    "golang-api-starter/internal/domain"
-    "golang-api-starter/internal/repository"
+    "go-api-starter/internal/domain"
+    "go-api-starter/internal/repository"
     "golang.org/x/crypto/bcrypt"
 )
 

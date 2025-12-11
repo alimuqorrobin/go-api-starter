@@ -127,7 +127,7 @@ Sudah selesai:
 
 **Struktur sekarang:**
 ```
-// golang-api-starter/
+// go-api-starter/
 // ├── cmd/server/main.go
 // ├── config/config.go
 // ├── internal/

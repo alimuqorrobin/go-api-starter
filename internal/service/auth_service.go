@@ -3,8 +3,8 @@ package service
 import (
     "context"
 
-    "golang-api-starter/internal/domain"
-    "golang-api-starter/pkg/jwt"
+    "go-api-starter/internal/domain"
+    "go-api-starter/pkg/jwt"
 )
 
 type AuthService struct {

@@ -3,7 +3,7 @@ package logger
 import (
     "os"
 
-    "golang-api-starter/config"
+    "go-api-starter/config"
     "go.uber.org/zap"
     "go.uber.org/zap/zapcore"
     "gopkg.in/natefinch/lumberjack.v2"
