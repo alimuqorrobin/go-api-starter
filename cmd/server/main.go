@@ -6,53 +6,106 @@ import (
     "net/http"
     "os"
     "os/signal"
+    "syscall"
     "time"
 
-    "go-api-starter/config"
-    "go-api-starter/internal/app"
-    "go-api-starter/internal/pkg/logger"
+    "golang-api-starter/config"
+    "golang-api-starter/internal/database"
+    "golang-api-starter/internal/router"
+    "golang-api-starter/pkg/logger"
+    _ "golang-api-starter/docs"
+
+    "github.com/gin-gonic/gin"
 )
 
+// @title Golang API Starter Enterprise
+// @version 2.0
+// @description Enterprise-grade REST API with JWT Authentication, Rate Limiting, Daily Logging, Recovery, and Concurrency
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.example.com/support
+// @contact.email support@example.com
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /api/v1
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token.
+
 func main() {
-    cfg := config.LoadFromEnv()
+    // Load configuration
+    cfg := config.LoadConfig()
 
-    lg, err := logger.NewLogger(cfg.LogDir, cfg.LogRotationDays, cfg.LogMaxAgeDays, cfg.LogLevel)
+    // Initialize logger
+    appLogger := logger.NewLogger(cfg)
+    defer appLogger.Sync()
+
+    appLogger.Info("🚀 Starting Golang API Starter...")
+
+    // Initialize database
+    db, err := database.NewConnection(cfg)
     if err != nil {
-        fmt.Println("logger init failed:", err)
-        os.Exit(1)
+        appLogger.Fatal("❌ Failed to connect to database", "error", err)
     }
-    defer lg.Logger.Exit(0)
+    defer db.Close()
 
-    appInstance, err := app.New(lg, cfg)
-    if err != nil {
-        lg.Fatal("failed to init app", logger.F("err", err.Error()))
+    appLogger.Info("✅ Database connected successfully")
+
+    // Run migrations
+    migrationManager := database.NewMigrationManager(db.GetDB(), cfg.MigrationPath)
+    if err := migrationManager.RunMigrations(); err != nil {
+        appLogger.Fatal("❌ Migration failed", "error", err)
     }
 
-    addr := fmt.Sprintf(":%s", cfg.AppPort)
+    appLogger.Info("✅ Migrations completed successfully")
+
+    // Set Gin mode
+    if !cfg.Debug {
+        gin.SetMode(gin.ReleaseMode)
+    }
+
+    // Setup router
+    r := router.SetupRouter(db, cfg, appLogger)
+
+    // Create server
     srv := &http.Server{
-        Addr:         addr,
-        Handler:      appInstance.Router,
+        Addr:         fmt.Sprintf(":%s", cfg.Port),
+        Handler:      r,
         ReadTimeout:  15 * time.Second,
         WriteTimeout: 15 * time.Second,
         IdleTimeout:  60 * time.Second,
     }
 
-    lg.Info("http server starting", logger.F("addr", addr))
+    // Start server in goroutine
     go func() {
+        appLogger.Info(fmt.Sprintf("🚀 Server running on port %s", cfg.Port))
+        appLogger.Info(fmt.Sprintf("📚 Swagger UI: http://localhost:%s/swagger/index.html", cfg.Port))
+        appLogger.Info(fmt.Sprintf("🏥 Health check: http://localhost:%s/health", cfg.Port))
+        
         if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            lg.Fatal("listen error", logger.F("err", err.Error()))
+            appLogger.Fatal("❌ Failed to start server", "error", err)
         }
     }()
 
+    // Graceful shutdown
     quit := make(chan os.Signal, 1)
-    signal.Notify(quit, os.Interrupt)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     <-quit
-    lg.Info("shutting down server...")
 
-    ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+    appLogger.Info("⏳ Shutting down server...")
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
+
     if err := srv.Shutdown(ctx); err != nil {
-        lg.Fatal("server forced to shutdown", logger.F("err", err.Error()))
+        appLogger.Fatal("❌ Server forced to shutdown", "error", err)
     }
-    lg.Info("server stopped gracefully")
+
+    appLogger.Info("✅ Server exited properly")
 }
