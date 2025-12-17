@@ -2,24 +2,32 @@
 
 Sebuah template API production-ready dengan arsitektur enterprise, built dengan Go 1.22+.
 
-**Status:** ✅ Ready to Use | 🚀 Production-Ready | 📦 Zero External Router Dependencies
+**Status:** ✅ Ready to Use | 🚀 Production-Ready | 🔒 Race Condition Protected | 🔄 Transaction Safe
+
+**Latest Updates:**
+- ✅ Transaction Management dengan automatic rollback
+- ✅ Race Condition Protection dengan pessimistic locking
+- ✅ Safe stock operations (DeductStock, AddStock, TransferStock)
+- ✅ Comprehensive logging dengan daily rotation
+- ✅ Scheduler untuk background tasks
 
 ---
 
 ## 📋 Table of Contents
 
 1. [Quick Start](#quick-start)
-2. [Sistem Architecture](#sistem-architecture)
-3. [Project Structure](#project-structure)
-4. [Features](#features)
+2. [Features](#features)
+3. [Architecture](#architecture)
+4. [Project Structure](#project-structure)
 5. [API Endpoints](#api-endpoints)
 6. [Database Setup](#database-setup)
-7. [Migration Guide](#migration-guide)
-8. [Logger System](#logger-system)
-9. [Scheduler Guide](#scheduler-guide)
-10. [Menambah Library Baru](#menambah-library-baru)
-11. [Troubleshooting](#troubleshooting)
-12. [Development Tips](#development-tips)
+7. [Transaction Management](#transaction-management)
+8. [Locking & Race Condition](#locking--race-condition)
+9. [Migration Guide](#migration-guide)
+10. [Logger System](#logger-system)
+11. [Scheduler Guide](#scheduler-guide)
+12. [Menambah Feature Baru](#menambah-feature-baru)
+13. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -52,148 +60,19 @@ cp .env.example .env
 # 5. Run application
 go run cmd/main.go
 
-# 6. Test health check
+# 6. Test
 curl http://localhost:8080/health
 ```
 
 **Expected Output:**
 ```
-Starting application in development environment
-Database connected successfully
-Migrations completed successfully
-Server starting on port 8080
+2025-12-16T10:45:17.279+0700    info    Starting application in development environment
+2025-12-16T10:45:17.279+0700    info    Database connected successfully
+2025-12-16T10:45:17.279+0700    info    Migrations completed successfully
+2025-12-16T10:45:17.279+0700    info    Server starting on port 8080
 ```
 
-✅ Aplikasi sudah running! 🎉
-
----
-
-## 🏗️ Sistem Architecture
-
-### **Layers Overview**
-
-```
-┌─────────────────────────────────────────┐
-│         HTTP Layer (Handlers)           │
-│  • Request parsing                      │
-│  • Response formatting                  │
-│  • Middleware (Auth, CORS, Rate Limit)  │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│       Service Layer (Business Logic)    │
-│  • Validation                           │
-│  • Business rules                       │
-│  • Orchestration                        │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│    Repository Layer (Data Access)       │
-│  • Database queries (via interfaces)    │
-│  • Data mapping                         │
-│  • Error handling                       │
-└──────────────────┬──────────────────────┘
-                   │
-┌──────────────────▼──────────────────────┐
-│      Database Layer (Abstraction)       │
-│  • GORM ORM                             │
-│  • Driver: MySQL/PostgreSQL             │
-│  • Connection pooling                   │
-└─────────────────────────────────────────┘
-```
-
-### **Why This Architecture?**
-
-| Layer | Benefit |
-|-------|---------|
-| **Handler** | Easy to test, clean separation |
-| **Service** | Reusable logic, business rules |
-| **Repository** | Database agnostic (swap MySQL ↔ PostgreSQL) |
-| **Database** | Abstraction, prevent vendor lock-in |
-
----
-
-## 📁 Project Structure
-
-```
-go-api-starter/
-│
-├── cmd/
-│   └── main.go                    # Application entry point
-│
-├── config/
-│   └── config.go                  # Load .env & config
-│
-├── internal/
-│   ├── domain/
-│   │   ├── models.go              # Data structures (User, Product, etc)
-│   │   └── errors.go              # Custom errors
-│   │
-│   ├── repository/                # Data access layer
-│   │   ├── interfaces.go          # Interfaces (contracts)
-│   │   ├── user_repository.go     # User CRUD
-│   │   ├── product_repository.go  # Product CRUD
-│   │   └── jwt_token_repository.go # JWT token management
-│   │
-│   ├── service/                   # Business logic layer
-│   │   ├── interfaces.go
-│   │   ├── user_service.go
-│   │   ├── product_service.go
-│   │   └── auth_service.go
-│   │
-│   ├── http/
-│   │   ├── handlers/              # HTTP request handlers
-│   │   │   ├── user_handler.go
-│   │   │   ├── product_handler.go
-│   │   │   └── auth_handler.go
-│   │   │
-│   │   ├── middleware/            # HTTP middleware
-│   │   │   ├── auth.go            # JWT validation
-│   │   │   ├── cors.go            # CORS handling
-│   │   │   ├── logging.go         # Request logging
-│   │   │   └── ratelimit.go       # Rate limiting
-│   │   │
-│   │   ├── response/
-│   │   │   └── response.go        # Standardized responses
-│   │   │
-│   │   └── router.go              # Route definition
-│   │
-│   ├── database/
-│   │   └── database.go            # Database abstraction
-│   │
-│   ├── logger/
-│   │   └── logger.go              # Zap logger (daily rotation)
-│   │
-│   ├── scheduler/
-│   │   ├── main.go                # Scheduler manager
-│   │   └── task.go                # Task implementations
-│   │
-│   └── migration/
-│       ├── migration.go           # Migration manager
-│       └── migrations/
-│           ├── 001_create_users.go
-│           ├── 002_create_products.go
-│           └── 003_create_jwt_tokens.go
-│
-├── pkg/
-│   ├── jwt/
-│   │   └── jwt.go                 # JWT utilities
-│   └── utils/
-│       └── helpers.go             # Helper functions
-│
-├── logs/                          # Generated logs (daily)
-│   ├── app.log
-│   ├── app-2024-01-15.log.gz
-│   └── ...
-│
-├── .env                           # Environment variables (GITIGNORE)
-├── .env.example                   # Template .env
-├── docker-compose.yml             # Docker setup
-├── Makefile                       # Common commands
-├── go.mod                         # Go modules
-├── go.sum                         # Dependencies lock
-└── README.md                      # This file
-```
+✅ Aplikasi siap digunakan! 🎉
 
 ---
 
@@ -201,29 +80,130 @@ go-api-starter/
 
 ### ✅ Core Features
 
-- [x] **Clean Architecture** - Layered with interfaces for decoupling
-- [x] **Database Agnostic** - Switch MySQL ↔ PostgreSQL tanpa code change
-- [x] **JWT Authentication** - Access token (24h) + Refresh token (7d)
-- [x] **CRUD Operations** - User, Product, JWT Token
-- [x] **Rate Limiting** - 100 req/minute per IP
-- [x] **CORS Support** - Configurable origins
-- [x] **Graceful Shutdown** - Clean shutdown with timeout
-- [x] **Logger** - Daily rotation with 7-day retention
-- [x] **Migrations** - Version control for schema
-- [x] **Scheduler** - Non-overlapping background tasks
-- [x] **Error Handling** - Centralized error management
-- [x] **Request Logging** - All requests logged with timing
+| Feature | Status | Detail |
+|---------|--------|--------|
+| **Clean Architecture** | ✅ | Layered with interfaces |
+| **Database Agnostic** | ✅ | Switch MySQL ↔ PostgreSQL |
+| **JWT Authentication** | ✅ | Access + Refresh token |
+| **CRUD Operations** | ✅ | User, Product, JWT Token |
+| **Transaction Support** | ✅ | Atomic operations dengan WithTx() |
+| **Pessimistic Locking** | ✅ | Race condition protected |
+| **Rate Limiting** | ✅ | 100 req/minute per IP |
+| **CORS Support** | ✅ | Configurable origins |
+| **Graceful Shutdown** | ✅ | Clean shutdown |
+| **Logger** | ✅ | Daily rotation, 7-day retention |
+| **Migrations** | ✅ | Version control schema |
+| **Scheduler** | ✅ | Non-overlapping tasks |
+| **Error Handling** | ✅ | Centralized management |
+| **Request Logging** | ✅ | All requests logged |
 
-### 📊 Configuration
+---
 
-| Feature | Default | Customizable |
-|---------|---------|--------------|
-| Port | 8080 | ✅ PORT in .env |
-| JWT Expiry | 24h | ✅ JWT_EXPIRATION_HOURS |
-| Refresh Expiry | 7d | ✅ REFRESH_EXPIRATION_DAYS |
-| Rate Limit | 100/min | ✅ In code |
-| Log Retention | 7d | ✅ In logger.go |
-| CORS Origins | localhost:3000 | ✅ CORS_ALLOWED_ORIGINS |
+## 🏗️ Architecture
+
+### Layered Architecture
+
+```
+┌─────────────────────────────────────┐
+│      HTTP Layer (Handlers)          │
+│  • Request/Response handling        │
+│  • Middleware (Auth, CORS, Rate)    │
+│  • Validation                       │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│    Service Layer (Business Logic)   │
+│  • Validation & transformation      │
+│  • Business rules                   │
+│  • Transaction management           │
+│  • Locking logic                    │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│  Repository Layer (Data Access)     │
+│  • Database queries                 │
+│  • Data mapping                     │
+│  • Error handling                   │
+│  • (Database agnostic)              │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│    Database Layer (Abstraction)     │
+│  • GORM ORM                         │
+│  • Driver: MySQL/PostgreSQL         │
+│  • Connection pooling               │
+└─────────────────────────────────────┘
+```
+
+### Benefits
+
+✅ **Separation of Concerns** - Each layer has single responsibility
+✅ **Easy Testing** - Mock layers independently
+✅ **Maintainability** - Changes isolated to specific layer
+✅ **Scalability** - Add features without affecting others
+✅ **Database Independence** - Switch database driver easily
+
+---
+
+## 📁 Project Structure
+
+```
+go-api-starter/
+├── cmd/
+│   └── main.go                    # Entry point
+│
+├── config/
+│   └── config.go                  # .env loading & config
+│
+├── internal/
+│   ├── domain/
+│   │   ├── models.go              # User, Product, JWTToken
+│   │   └── errors.go              # Custom errors
+│   │
+│   ├── repository/
+│   │   ├── interfaces.go          # Contracts
+│   │   ├── user_repository.go
+│   │   ├── product_repository.go
+│   │   └── jwt_token_repository.go
+│   │
+│   ├── service/
+│   │   ├── interfaces.go
+│   │   ├── user_service.go
+│   │   ├── product_service.go     # ✨ NEW: dengan locking
+│   │   └── auth_service.go
+│   │
+│   ├── http/
+│   │   ├── handlers/
+│   │   ├── middleware/
+│   │   ├── response/
+│   │   └── router.go
+│   │
+│   ├── database/
+│   │   └── transaction.go         # ✨ NEW: dengan locking helpers
+│   │
+│   ├── logger/
+│   │   └── logger.go              # Daily rotation
+│   │
+│   ├── scheduler/
+│   │   ├── main.go
+│   │   └── task.go
+│   │
+│   └── migration/
+│       ├── migration.go
+│       └── migrations/
+│
+├── pkg/
+│   ├── jwt/
+│   │   └── jwt.go
+│   └── utils/
+│       └── helpers.go
+│
+├── logs/                          # Auto-generated
+├── .env                           # Git ignored
+├── go.mod
+├── go.sum
+└── README.md
+```
 
 ---
 
@@ -253,64 +233,44 @@ Header: Authorization: Bearer <token>
 ### Users (CRUD)
 
 ```bash
-# Create user
+# Create
 POST /api/users
 {
-  "email": "newuser@example.com",
+  "email": "user@example.com",
   "password": "Pass123",
   "name": "John Doe"
 }
 
-# Get user
+# Get by ID
 GET /api/users/{id}
 
-# Get all users
+# Get all
 GET /api/users
 
-# Update user (requires auth)
+# Update (requires auth)
 PUT /api/users/{id}
-Header: Authorization: Bearer <token>
-{
-  "name": "Jane Doe"
-}
 
-# Delete user (requires auth)
+# Delete (requires auth)
 DELETE /api/users/{id}
-Header: Authorization: Bearer <token>
 ```
 
-### Products (CRUD)
+### Products (CRUD + Safe Stock Operations)
 
 ```bash
-# Create product (requires auth)
+# Create (requires auth)
 POST /api/products
-Header: Authorization: Bearer <token>
-{
-  "name": "MacBook Pro",
-  "price": 1999.99,
-  "stock": 50
-}
 
-# Get product
+# Get by ID
 GET /api/products/{id}
 
-# Get all products (paginated)
+# Get all (paginated)
 GET /api/products?page=1&limit=10
 
-# Update product (requires auth)
+# Update (requires auth)
 PUT /api/products/{id}
-Header: Authorization: Bearer <token>
 
-# Delete product (requires auth)
+# Delete (requires auth)
 DELETE /api/products/{id}
-Header: Authorization: Bearer <token>
-```
-
-### Health Check
-
-```bash
-GET /health
-Response: {"status":"healthy"}
 ```
 
 ---
@@ -322,11 +282,6 @@ Response: {"status":"healthy"}
 ```bash
 docker-compose up -d mysql
 ```
-
-Ini akan:
-- Start MySQL container
-- Create database `golang_api`
-- Port: 3306
 
 ### Option 2: Manual MySQL
 
@@ -343,26 +298,159 @@ Edit `.env`:
 DB_DRIVER=postgres
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=postgres
 DB_NAME=golang_api
 ```
 
-Atau manual:
-```bash
-psql postgres
-CREATE DATABASE golang_api;
-\q
+---
+
+## 🔄 Transaction Management
+
+### Apa Itu Transaction?
+
+Transaction adalah operasi atomic (all-or-nothing) yang memastikan data consistency.
+
+### Usage
+
+```go
+// Simple transaction
+err := database.WithTx(db, ctx, func(tx *gorm.DB) error {
+    // Operation 1
+    if err := tx.Create(&user).Error; err != nil {
+        return err  // Auto rollback
+    }
+
+    // Operation 2
+    if err := tx.Update("field", "value").Error; err != nil {
+        return err  // Auto rollback
+    }
+
+    return nil  // Auto commit all
+})
 ```
 
-### Verify Connection
+### With Panic Recovery
+
+```go
+// More robust untuk production
+err := database.WithTxRecovery(db, ctx, func(tx *gorm.DB) error {
+    // operations
+    return nil
+})
+```
+
+### Example: Safe Order Processing
+
+```go
+// Create order + update stock atomically
+err := database.WithTx(db, ctx, func(tx *gorm.DB) error {
+    // 1. Create order
+    if err := tx.Create(&order).Error; err != nil {
+        return err
+    }
+
+    // 2. Update stock (must succeed or rollback all)
+    if err := tx.Model(&product).
+        Update("stock", gorm.Expr("stock - ?", qty)).Error; err != nil {
+        return err
+    }
+
+    return nil
+})
+
+// If any step fails: rollback all ✅
+// If all succeed: commit all ✅
+```
+
+---
+
+## 🔒 Locking & Race Condition Protection
+
+### Apa Itu Race Condition?
+
+```
+Tanpa locking:
+  Request 1: Read stock (100) → Deduct 60 → Save (40)
+  Request 2: Read stock (100) → Deduct 50 → Save (50) ❌ WRONG!
+
+Dengan locking:
+  Request 1: LOCK stock → Read (100) → Deduct 60 → Save (40) → UNLOCK
+  Request 2: WAIT (locked) → LOCK stock → Read (40) → Error (insufficient) ✅
+```
+
+### Locking Functions
+
+```go
+// Lock untuk update (pessimistic locking)
+database.LockForUpdate(tx, &product, productID)
+
+// Lock untuk read (shared)
+database.LockForShare(tx, &product, productID)
+
+// Custom where clause
+database.LockForUpdateWhere(tx, &product, "id = ?", id)
+
+// No wait (fail immediately)
+database.NoWait(tx, &product, productID)
+
+// Skip locked rows
+database.SkipLocked(tx, &product)
+```
+
+### Safe Stock Operations
+
+Product service sudah provide safe operations dengan built-in locking:
+
+```go
+// Safely deduct stock (race condition protected)
+err := productService.DeductStock(ctx, productID, quantity)
+
+// Safely add stock
+err := productService.AddStock(ctx, productID, quantity)
+
+// Safely transfer stock between products
+err := productService.TransferStock(ctx, fromID, toID, quantity)
+```
+
+### Example: Safe Stock Deduction
+
+```go
+// Handler: Create order
+func (h *OrderHandler) CreateOrder(w http.ResponseWriter, r *http.Request) {
+    // 1. Safely deduct stock (locked, atomic, race condition protected)
+    if err := h.productService.DeductStock(ctx, productID, quantity); err != nil {
+        response.BadRequest(w, "Insufficient stock")
+        return
+    }
+
+    // 2. Create order
+    order := &domain.Order{...}
+    
+    // 3. Success
+    response.Created(w, order)
+}
+```
+
+### When to Use Locking
+
+**✅ Use locking untuk:**
+- Stock update (inventory)
+- Balance transfer (money)
+- Counter increment
+- Critical business operations
+
+**❌ Tidak perlu locking untuk:**
+- Simple read operations
+- Single insert (no concurrent risk)
+- Independent operations
+
+### Test Race Condition
 
 ```bash
-# MySQL
-mysql -u root -p golang_api -e "SELECT 1"
+# Go race detector
+go run -race cmd/main.go
 
-# PostgreSQL
-psql -U postgres -d golang_api -c "SELECT 1"
+# Or test
+go test -race ./...
 ```
 
 ---
@@ -375,27 +463,25 @@ Migrations otomatis jalan saat aplikasi start:
 
 ```
 Application start
-    ↓
+  ↓
 Check migration_records table
-    ↓
-For each migration file:
-  - Already in DB? → SKIP (safe!)
-  - Not in DB? → RUN & record
-    ↓
+  ↓
+For each migration:
+  - Already ran? → SKIP (safe!)
+  - Not ran? → RUN & record
+  ↓
 Tables created ✅
 ```
 
-**Result:** Data TIDAK pernah dihapus! 🔒
-
-### View Migration Status
+### View Migration History
 
 ```bash
 mysql -u root golang_api
 
-# Lihat semua migrations yang sudah jalan
+# See all migrations
 SELECT * FROM migration_records;
 
-# Lihat structure
+# See table structure
 DESCRIBE users;
 DESCRIBE products;
 DESCRIBE jwt_tokens;
@@ -410,9 +496,7 @@ File: `internal/migration/migrations/004_create_categories.go`
 ```go
 package migrations
 
-import (
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
 type CreateCategoriesTable struct{}
 
@@ -426,39 +510,21 @@ func (m *CreateCategoriesTable) Name() string {
 
 func (m *CreateCategoriesTable) Up(db *gorm.DB) error {
 	type Category struct {
-		ID   uint   `gorm:"primaryKey"`
-		Name string `gorm:"type:varchar(255);uniqueIndex"`
+		ID   uint
+		Name string `gorm:"uniqueIndex"`
 	}
 	return db.AutoMigrate(&Category{})
 }
 ```
 
-**Step 2: Add model**
-
-File: `internal/domain/models.go`
-
-```go
-type Category struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Name      string    `json:"name" gorm:"type:varchar(255);uniqueIndex"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-```
+**Step 2: Add model** (if needed)
 
 **Step 3: Register migration**
 
 File: `internal/migration/migration.go`
 
 ```go
-func NewMigrator(db *gorm.DB) *Migrator {
-	// ... existing code ...
-	
-	// Add this line:
-	m.migrations = append(m.migrations, migrations.NewCreateCategoriesTable())
-	
-	return m
-}
+m.migrations = append(m.migrations, migrations.NewCreateCategoriesTable())
 ```
 
 **Step 4: Run**
@@ -466,14 +532,6 @@ func NewMigrator(db *gorm.DB) *Migrator {
 ```bash
 go run cmd/main.go
 ```
-
-Output:
-```
-Running migration: 004_create_categories_table
-✅ Migration completed: 004_create_categories_table
-```
-
-**Done!** ✅
 
 ---
 
@@ -483,24 +541,22 @@ Running migration: 004_create_categories_table
 
 ```
 logs/
-├── app.log                  # Today's log (readable)
+├── app.log                  # Today (readable)
 ├── app-2024-01-15.log.gz   # Yesterday (compressed)
-├── app-2024-01-14.log.gz
-└── ... (max 7 days)
+└── ... (max 7 files)
 ```
 
 ### View Logs
 
 ```bash
-# Real-time log
+# Real-time
 tail -f logs/app.log
 
-# Old logs (compressed)
+# Old logs
 zcat logs/app-2024-01-15.log.gz
 
 # Search
 grep "error" logs/app.log
-grep "user_id=1" logs/app.log
 ```
 
 ### Log Format
@@ -510,7 +566,7 @@ grep "user_id=1" logs/app.log
   "timestamp": "2024-01-16T10:45:17.279+0700",
   "level": "info",
   "caller": "cmd/main.go:31",
-  "message": "Starting application in production environment"
+  "message": "Starting application"
 }
 ```
 
@@ -519,16 +575,8 @@ grep "user_id=1" logs/app.log
 Edit `internal/logger/logger.go`:
 
 ```go
-w := &lumberjack.Logger{
-    Filename:   logPath + "/app.log",
-    MaxSize:    100,   // Rotate jika >100MB
-    MaxBackups: 7,     // Keep 7 files
-    MaxAge:     7,     // Keep 7 hari (EDIT INI)
-    Compress:   true,  // Compress old files
-}
+MaxAge: 7,  // Change ini untuk hari retention
 ```
-
-Ganti `7` dengan jumlah hari yang Anda inginkan! 📅
 
 ---
 
@@ -540,80 +588,62 @@ Scheduler otomatis jalankan tasks tanpa overlapping:
 
 ```
 Start scheduler
-    ↓
-Register task (interval: 24 hours)
-    ↓
-Wait 24 hours
-    ↓
-Execute task in goroutine
-    ↓
-Wait untuk selesai
-    ↓
+  ↓
+Register task (interval)
+  ↓
+Wait interval
+  ↓
+Execute task
+  ↓
 Repeat
 ```
 
 ### Built-in Tasks
 
-**Cleanup Expired Tokens** (every 24 hours)
-- Delete JWT tokens yang sudah expired
-- Prevent database bloat
-- Otomatis jalan
+- **Cleanup Expired Tokens** (every 24 hours)
 
-### Add New Scheduler Task
+### Add New Task
 
-**Step 1: Create task file**
+**Step 1: Create task**
 
-File: `internal/scheduler/tasks/email_notification_task.go`
+File: `internal/scheduler/tasks/email_task.go`
 
 ```go
 package tasks
 
 import (
-	"go-api-starter/internal/scheduler"
+	"golang-api-starter/internal/scheduler"
 	"go.uber.org/zap"
 )
 
-type EmailNotificationTask struct {
+type EmailTask struct {
 	logger *zap.SugaredLogger
 }
 
-func NewEmailNotificationTask(logger *zap.SugaredLogger) scheduler.Task {
-	return &EmailNotificationTask{
-		logger: logger,
-	}
+func NewEmailTask(logger *zap.SugaredLogger) scheduler.Task {
+	return &EmailTask{logger: logger}
 }
 
-func (t *EmailNotificationTask) Name() string {
-	return "send-email-notifications"
+func (t *EmailTask) Name() string {
+	return "send-emails"
 }
 
-func (t *EmailNotificationTask) Execute() error {
-	t.logger.Info("Executing email notification task")
-	
-	// Your logic here
-	// Example: Send pending notifications
-	
-	t.logger.Info("Email notification task completed")
+func (t *EmailTask) Execute() error {
+	t.logger.Info("Sending emails...")
+	// Your logic
 	return nil
 }
 ```
 
 **Step 2: Register in main.go**
 
-File: `cmd/main.go`
-
 ```go
-func setupSchedulerTasks(sch *scheduler.Scheduler, db database.Database, logger *zap.SugaredLogger) {
-	// Existing task
-	tokenRepo := repository.NewJWTTokenRepository(db)
-	cleanupTask := scheduler.NewCleanupExpiredTokensTask(tokenRepo, logger)
-	sch.AddTask(24*time.Hour, cleanupTask)
-
-	// Add new task (every 1 hour)
-	emailTask := tasks.NewEmailNotificationTask(logger)
-	sch.AddTask(1*time.Hour, emailTask)  // ← ADD THIS
-
-	logger.Info("Scheduler tasks registered successfully")
+func setupSchedulerTasks(sch *scheduler.Scheduler, ...) {
+	// Existing tasks...
+	
+	// Add new task
+	emailTask := tasks.NewEmailTask(logger)
+	sch.AddTask(1*time.Hour, emailTask)
 }
 ```
 
@@ -623,130 +653,96 @@ func setupSchedulerTasks(sch *scheduler.Scheduler, db database.Database, logger 
 go run cmd/main.go
 ```
 
-Output:
-```
-Scheduler started
-Scheduler tasks registered successfully
-Executing send-email-notifications
-Email notification task completed
-```
+---
 
-**Done!** ✅
+## 🆕 Menambah Feature Baru
 
-### Schedule Intervals
+### Contoh: Tambah Model `Category`
+
+**Step 1: Create model**
+
+File: `internal/domain/models.go`
 
 ```go
-// Common intervals
-time.Second       // 1 second
-time.Minute       // 1 minute
-5 * time.Minute   // 5 minutes
-1 * time.Hour     // 1 hour
-24 * time.Hour    // 1 day
-7 * 24 * time.Hour // 1 week
+type Category struct {
+	ID        uint
+	Name      string `gorm:"uniqueIndex"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+```
+
+**Step 2: Create repository interface**
+
+File: `internal/repository/interfaces.go`
+
+```go
+type CategoryRepository interface {
+	Create(ctx context.Context, category *domain.Category) error
+	GetByID(ctx context.Context, id uint) (*domain.Category, error)
+	GetAll(ctx context.Context) ([]domain.Category, error)
+	Update(ctx context.Context, category *domain.Category) error
+	Delete(ctx context.Context, id uint) error
+}
+```
+
+**Step 3: Implement repository**
+
+File: `internal/repository/category_repository.go` (copy pattern dari product_repository.go)
+
+**Step 4: Create service interface**
+
+File: `internal/service/interfaces.go`
+
+```go
+type CategoryService interface {
+	CreateCategory(ctx context.Context, req *domain.CreateCategoryRequest) (*domain.Category, error)
+	GetCategory(ctx context.Context, id uint) (*domain.Category, error)
+	// ... etc
+}
+```
+
+**Step 5: Implement service**
+
+File: `internal/service/category_service.go` (copy pattern dari product_service.go)
+
+**Step 6: Create handler**
+
+File: `internal/http/handlers/category_handler.go`
+
+**Step 7: Register routes**
+
+File: `internal/http/router.go`
+
+```go
+categoryService := service.NewCategoryService(gormDB, categoryRepo)
+categoryHandler := handlers.NewCategoryHandler(categoryService)
+
+mux.HandleFunc("POST /api/categories", categoryHandler.Create)
+// ... etc
+```
+
+**Step 8: Create migration**
+
+File: `internal/migration/migrations/004_create_categories.go`
+
+**Step 9: Register migration**
+
+File: `internal/migration/migration.go`
+
+```go
+m.migrations = append(m.migrations, migrations.NewCreateCategoriesTable())
+```
+
+**Step 10: Run**
+
+```bash
+go run cmd/main.go
 ```
 
 ---
 
-## 📦 Menambah Library Baru
-
-### Scenario: Tambah Email Service (Sendgrid)
-
-### Step 1: Add Dependency
-
-```bash
-go get github.com/sendgrid/sendgrid-go
-go mod tidy
-```
-
-### Step 2: Create Service
-
-File: `internal/service/email_service.go`
-
-```go
-package service
-
-import (
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
-)
-
-type EmailService interface {
-	SendEmail(to, subject, body string) error
-}
-
-type emailService struct {
-	apiKey string
-}
-
-func NewEmailService(apiKey string) EmailService {
-	return &emailService{apiKey: apiKey}
-}
-
-func (s *emailService) SendEmail(to, subject, body string) error {
-	from := mail.NewEmail("noreply", "noreply@example.com")
-	toEmail := mail.NewEmail("Recipient", to)
-	message := mail.NewSingleEmail(from, subject, toEmail, body, "")
-	
-	client := sendgrid.NewSendClient(s.apiKey)
-	_, err := client.Send(message)
-	return err
-}
-```
-
-### Step 3: Add to Config
-
-File: `config/config.go`
-
-```go
-type Config struct {
-	// ... existing fields ...
-	SendgridAPIKey string
-}
-
-func LoadConfig() *Config {
-	return &Config{
-		// ... existing ...
-		SendgridAPIKey: getEnv("SENDGRID_API_KEY", ""),
-	}
-}
-```
-
-### Step 4: Add to .env
-
-File: `.env`
-
-```env
-SENDGRID_API_KEY=SG.xxxxx...
-```
-
-### Step 5: Inject & Use
-
-File: `cmd/main.go`
-
-```go
-// After database init
-emailService := service.NewEmailService(cfg.SendgridAPIKey)
-
-// Pass to handler atau scheduler
-```
-
-### Step 6: Update go.mod
-
-```bash
-go mod tidy
-go mod verify
-```
-
-**Verify dependency:**
-
-```bash
-go list -m all | grep sendgrid
-# Output: github.com/sendgrid/sendgrid-go v3.x.x
-```
-
----
-
-## 🔍 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Database Connection Error
 
@@ -755,21 +751,17 @@ Error: Access denied for user 'root'@'localhost'
 ```
 
 **Solutions:**
-1. Check .env file exists di root folder
+1. Check `.env` file exists di root folder
 2. Verify MySQL running: `mysql -u root -p`
-3. Update DB_USER & DB_PASSWORD di .env
-4. Create database: `CREATE DATABASE golang_api;`
+3. Create database: `CREATE DATABASE golang_api;`
 
 ### Migration Error
 
 ```
-Error 1170: BLOB/TEXT column used in key specification without a key length
+Error: BLOB/TEXT column used in key specification
 ```
 
-**Solution:**
-- Check `internal/domain/models.go`
-- Use `VARCHAR(255)` instead of TEXT for indexed columns
-- Text fields hanya untuk non-indexed columns
+**Solution:** Use `VARCHAR(255)` untuk indexed columns, bukan TEXT
 
 ### Port Already in Use
 
@@ -777,127 +769,31 @@ Error 1170: BLOB/TEXT column used in key specification without a key length
 Address already in use: :[8080]
 ```
 
+**Solution:** Change PORT di `.env` atau kill existing process
+
+### Redeclared Interface
+
+```
+ProductService redeclared in this block
+```
+
+**Solution:** Declare interface hanya di `interfaces.go`, bukan di implementation file
+
+### Missing Module Import
+
+```
+package not found
+```
+
 **Solution:**
-1. Change port di .env: `PORT=8081`
-2. Or kill existing process: `lsof -i :8080` (Mac/Linux)
-
-### Logger Not Writing
-
-```
-logs/ folder empty
-```
-
-**Solution:**
-1. Check LOG_PATH di .env
-2. Create logs folder: `mkdir logs`
-3. Check file permissions: `chmod 755 logs/`
-
----
-
-## 💡 Development Tips
-
-### Environment Variables
-
 ```bash
-# Development
-ENVIRONMENT=development
-
-# Production
-ENVIRONMENT=production
-```
-
-### Database Switching
-
-```bash
-# From MySQL
-DB_DRIVER=mysql
-DB_HOST=localhost
-DB_PORT=3306
-
-# To PostgreSQL (no code change needed!)
-DB_DRIVER=postgres
-DB_HOST=localhost
-DB_PORT=5432
-```
-
-### Debug Mode
-
-Add logging:
-```go
-log.Debugf("User ID: %d", userID)
-```
-
-View logs:
-```bash
-tail -f logs/app.log | jq 'select(.level=="debug")'
-```
-
-### Test Endpoints
-
-Use Postman collection atau curl:
-
-```bash
-# Create user
-curl -X POST http://localhost:8080/api/users \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"Pass123","name":"Test"}'
-
-# Login
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"Pass123"}'
-
-# Get token dari response, gunakan di protected endpoints
+go mod tidy
+go mod download
 ```
 
 ---
 
-## 📚 Best Practices
-
-### Code Organization
-
-✅ **DO:**
-- Keep logic di service layer
-- Use interfaces untuk decoupling
-- Handle errors explicitly
-- Log important events
-
-❌ **DON'T:**
-- Put logic di handlers
-- Import directly, use interfaces
-- Ignore errors
-- Log sensitive data
-
-### Database
-
-✅ **DO:**
-- Use transactions untuk batch operations
-- Index frequently queried fields
-- Backup regularly
-- Use migrations untuk schema changes
-
-❌ **DON'T:**
-- Manual SQL jika bisa pakai GORM
-- Delete data langsung di MySQL
-- Skip migrations
-
-### Security
-
-✅ **DO:**
-- Hash passwords (bcrypt)
-- Validate inputs
-- Use HTTPS in production
-- Rotate JWT secrets
-
-❌ **DON'T:**
-- Store passwords in plain text
-- Trust user input
-- Use HTTP in production
-- Hardcode secrets
-
----
-
-## 🚀 Production Checklist
+## 📊 Production Checklist
 
 Before deploying:
 
@@ -905,25 +801,19 @@ Before deploying:
 □ Update .env.production dengan actual values
 □ Set ENVIRONMENT=production
 □ Change JWT_SECRET ke strong random string
-□ Set CORS_ALLOWED_ORIGINS ke production domains
+□ Update CORS_ALLOWED_ORIGINS
 □ Setup database backups
-□ Configure log rotation
 □ Test all endpoints
 □ Check error logs
-□ Verify rate limiting
+□ Test rate limiting
 □ Test graceful shutdown
+□ Test with -race flag
+□ Monitor transaction logs
 ```
 
 ---
 
-## 📞 Support & Resources
-
-### Documentation
-- [Go Language](https://golang.org/doc/)
-- [GORM](https://gorm.io/)
-- [Zap Logger](https://github.com/uber-go/zap)
-
-### Useful Commands
+## 📞 Common Commands
 
 ```bash
 # Build
@@ -935,18 +825,82 @@ go fmt ./...
 # Run tests
 go test ./...
 
+# Test with race detection
+go test -race ./...
+
+# Run with race detection
+go run -race cmd/main.go
+
 # View dependencies
 go list -m all
 
 # Clean cache
 go clean -modcache
+
+# Tidy modules
+go mod tidy
 ```
 
 ---
 
-## 📄 License
+## 🎯 Best Practices
 
-MIT License - Feel free to use for personal or commercial projects.
+### Code Organization
+✅ DO:
+- Keep logic di service layer
+- Use interfaces untuk decoupling
+- Handle errors explicitly
+- Use transactions untuk multi-step operations
+- Use locking untuk concurrent access
+
+❌ DON'T:
+- Put logic di handlers
+- Import directly, use interfaces
+- Ignore errors
+- Skip transactions
+- Forget to lock critical sections
+
+### Database
+✅ DO:
+- Use transactions untuk atomicity
+- Lock rows saat concurrent access
+- Index frequently queried fields
+- Backup regularly
+- Use migrations untuk schema changes
+
+❌ DON'T:
+- Manual SQL jika bisa pakai GORM
+- Skip locking untuk stock operations
+- Ignore race conditions
+- Delete data langsung di MySQL
+
+---
+
+## 📚 Resources
+
+- [Go Documentation](https://golang.org/doc/)
+- [GORM](https://gorm.io/)
+- [Zap Logger](https://github.com/uber-go/zap)
+- [Go Race Detector](https://golang.org/doc/articles/race_detector)
+
+---
+
+## 📝 Version History
+
+### v1.1.0 (Latest)
+- ✨ Added Transaction Management dengan WithTx()
+- ✨ Added Pessimistic Locking dengan LockForUpdate()
+- ✨ Added Safe Stock Operations (DeductStock, AddStock, TransferStock)
+- 🐛 Fixed race condition pada concurrent operations
+- 📚 Comprehensive documentation
+
+### v1.0.0
+- Initial release
+- Basic CRUD operations
+- JWT authentication
+- Rate limiting
+- Logger dengan daily rotation
+- Migrations
 
 ---
 

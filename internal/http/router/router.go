@@ -1,9 +1,3 @@
-// ============================================
-// FILE: internal/http/router.go
-// FIX: Use mux.Handle() instead of mux.HandleFunc()
-// for middleware wrapped handlers
-// ============================================
-
 package router
 
 import (
@@ -27,14 +21,18 @@ func SetupRouter(
 ) http.Handler {
 	mux := http.NewServeMux()
 
+	// Get GORM DB instance
+	gormDB := db.GetDB()
+
 	// ============ INITIALIZE REPOSITORIES ============
 	userRepo := repository.NewUserRepository(db)
 	productRepo := repository.NewProductRepository(db)
 	tokenRepo := repository.NewJWTTokenRepository(db)
 
 	// ============ INITIALIZE SERVICES ============
+	// FIXED: Pass gormDB to NewProductService
 	userService := service.NewUserService(userRepo)
-	productService := service.NewProductService(productRepo)
+	productService := service.NewProductService(gormDB, productRepo) // ← ADD gormDB parameter
 	jwtMgr := jwt.NewManager()
 	authService := service.NewAuthService(userRepo, tokenRepo, jwtMgr)
 
@@ -62,7 +60,6 @@ func SetupRouter(
 	mux.HandleFunc("GET /api/products", productHandler.GetAll)
 
 	// ============ PROTECTED ROUTES (REQUIRES AUTH) ============
-	// IMPORTANT: Use mux.Handle() untuk middleware wrapped handlers
 
 	// Auth
 	mux.Handle("POST /api/auth/logout", 
